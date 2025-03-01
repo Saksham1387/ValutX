@@ -1,8 +1,13 @@
+"use client";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "./mode-toggle";
+import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const Navbar = () => {
+  const { data: session } = useSession();
+  const router = useRouter();
   return (
     <nav className="w-full bg-black border-b border-gray-800 py-4 px-6">
       <div className="container mx-auto flex justify-between items-center">
@@ -11,9 +16,23 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center space-x-4">
-          <Button variant="outline" className="text-black border-white ">
-            Login
-          </Button>
+          {session ? (
+            <Button
+              variant="outline"
+              className="text-black border-white "
+              onClick={() => signOut()}
+            >
+              Logout
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="text-black border-white "
+              onClick={() => router.push("/auth")}
+            >
+              Login
+            </Button>
+          )}
           <ModeToggle />
         </div>
       </div>
