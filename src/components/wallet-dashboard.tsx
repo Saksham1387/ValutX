@@ -4,6 +4,8 @@ import { AccountAssets } from "./account-assest";
 import { TokenAssets } from "./TokenAssests";
 import { DashboardHeader } from "./dashboard-header";
 import TokenSwap from "./token-swap";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 interface TabsComponentProps {
   publicKey: string;
@@ -11,7 +13,11 @@ interface TabsComponentProps {
 
 export const WalletDashboard = ({ publicKey }: TabsComponentProps) => {
   const [activeTab, setActiveTab] = useState("send");
-
+  const {data:session} = useSession()
+  const router = useRouter();
+  if(!session?.user?.email){
+    router.push("/auth")
+  }
   return (
     <div className="w-full max-w-4xl mx-auto">
       {/* Improved Tab Buttons */}
