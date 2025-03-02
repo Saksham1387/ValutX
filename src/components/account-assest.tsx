@@ -1,13 +1,24 @@
-"use client"
+"use client";
+import { useToken } from "@/app/hooks/useToken";
 import { ClipboardCheck, Copy } from "lucide-react";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-interface AccountAssestProps {
+interface AccountAssetsProps {
   publicKey: string;
 }
 
-export const AccountAssest = ({ publicKey }: AccountAssestProps) => {
+export const AccountAssets = ({ publicKey }: AccountAssetsProps) => {
   const [copied, setCopied] = useState(false);
+  const { loading, tokenBalances } = useToken(publicKey);
+
+  // Reset copied state after 2 seconds
+  useEffect(() => {
+    if (copied) {
+      const timer = setTimeout(() => setCopied(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [copied]);
+
   return (
     <div className="mb-4">
       <div className="flex items-center text-slate-500 mb-2">
@@ -32,25 +43,41 @@ export const AccountAssest = ({ publicKey }: AccountAssestProps) => {
       </div>
 
       <div className="flex justify-between items-center">
-        <div className="flex items-baseline">
-          <span className="text-6xl font-bold text-slate-800">$0.00</span>
-          <span className="text-4xl ml-2 text-slate-400">USD</span>
-        </div>
+        {loading ? (
+          <>
+            {/* Skeleton for the balance */}
+            <div className="flex items-baseline">
+              <div className="h-14 w-48 bg-slate-200 animate-pulse rounded-lg"></div>
+            </div>
 
-        <button
-          className="flex items-center bg-slate-200 text-slate-600 px-4 py-2 rounded-full"
-          onClick={() => {
-            navigator.clipboard.writeText(publicKey);
-            setCopied(true);
-          }}
-        >
-          {copied == true ? (
-            <ClipboardCheck className="w-4 h-4 mr-2" />
-          ) : (
-            <Copy className="w-4 h-4 mr-2" />
-          )}
-          Your Wallet Address
-        </button>
+            {/* Skeleton for the button */}
+            <div className="h-10 w-40 bg-slate-200 animate-pulse rounded-full"></div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-baseline">
+              <span className="text-6xl font-bold text-slate-800">
+                {Number(tokenBalances?.totalBalance || 0).toFixed(2)}
+              </span>
+              <span className="text-4xl ml-2 text-slate-400">USD</span>
+            </div>
+
+            <button
+              className="flex items-center bg-slate-200 text-slate-600 px-4 py-2 rounded-full hover:bg-slate-300 transition-colors"
+              onClick={() => {
+                navigator.clipboard.writeText(publicKey);
+                setCopied(true);
+              }}
+            >
+              {copied ? (
+                <ClipboardCheck className="w-4 h-4 mr-2" />
+              ) : (
+                <Copy className="w-4 h-4 mr-2" />
+              )}
+              Your Wallet Address
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

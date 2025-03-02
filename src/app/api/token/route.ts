@@ -1,7 +1,4 @@
-import {
-  connection,
-  getSupportedTokens,
-} from "@/lib/contants";
+import { connection, getSupportedTokens } from "@/lib/contants";
 import {
   getAccount,
   getAssociatedTokenAddress,
@@ -17,12 +14,14 @@ export async function GET(req: NextRequest) {
   const balances = await Promise.all(
     supported_token.map((token) => getAccountBalance(token, address))
   );
-
+  const token = supported_token.map((token, index) => ({
+    ...token,
+    balance: balances[index],
+    usdBalance: balances[index] * Number(token.price),
+  }));
   return NextResponse.json({
-    token: supported_token.map((token, index) => ({
-      ...token,
-      balance: balances[index],
-    })),
+    token,
+    totalBalance: token.reduce((acc, val) => acc + val.usdBalance, 0),
   });
 }
 
@@ -31,9 +30,11 @@ async function getAccountBalance(
     name: string;
     mint: string;
     native: boolean;
+    decimals:number
   },
   address: string
 ) {
+
   if (token.native) {
     let balance = await connection.getBalance(new PublicKey(address));
     return balance / LAMPORTS_PER_SOL;
@@ -45,8 +46,8 @@ async function getAccountBalance(
 
   try {
     const account = await getAccount(connection, ata);
-    const mint = await getMint(connection, new PublicKey(token.mint));
-    return Number(account.amount) / 10 ** mint.decimals;
+    // const mint = await getMint(connection, new PublicKey(token.mint));
+    return Number(account.amount) / 10 ** decimals;
   } catch (e) {
     return 0;
   }
